@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
+use App\Models\Skill;
+use Illuminate\Http\Request;
 use App\Http\Requests\StoreSkillRequest;
 use App\Http\Requests\UpdateSkillRequest;
-use App\Models\Skill;
 
 class SkillController extends Controller
 {
@@ -13,7 +15,8 @@ class SkillController extends Controller
      */
     public function index()
     {
-        return 'skill';
+        $skills = Skill::get(['id', 'name', 'image']);
+        return Inertia::render('Skills/index', compact('skills'));
     }
 
     /**
@@ -21,15 +24,30 @@ class SkillController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Skills/create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSkillRequest $request)
+    public function store(Request $request)
     {
-        //
+        $request->validate([
+            'image' => ['required', 'image'],
+            'name' => ['required', 'min:3']
+        ]);
+
+        if($request->hasFile('image')) {
+            $image = $request->file('image')->store('skills');
+            Skill::create([
+                'name' => $request->name,
+                'image' => $image
+            ]);
+
+            return redirect()->route('skills.index');
+        };
+
+        return redirect()->back();
     }
 
     /**

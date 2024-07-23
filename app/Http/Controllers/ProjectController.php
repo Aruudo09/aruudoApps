@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
+use App\Models\Skill;
+use App\Models\Project;
+use Illuminate\Http\Request;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
-use App\Models\Project;
 
 class ProjectController extends Controller
 {
@@ -13,7 +16,7 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        return 'Project';
+        return Inertia::render('Projects/index');
     }
 
     /**
@@ -21,15 +24,34 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        //
+        $skills = Skill::all();
+        return Inertia::render('Projects/create', compact('skills'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProjectRequest $request)
+    public function store(Request $request)
     {
-        //
+        $request->validate([
+            'image' => ['required', 'image'],
+            'name' => ['required', 'min:3'],
+            'skill_id' => 'required'
+        ]);
+
+        if($request->hasFile('image')) {
+            $image = $request->file('image')->store('projects');
+            Project::create([
+                'skill_id' => $request->skill_id,
+                'name' => $request->name,
+                'image' => $image,
+                'prject_url' => $request->project_url
+            ]);
+
+            return redirect()->route('projects.index');
+        };
+
+        return redirect()->back();
     }
 
     /**
